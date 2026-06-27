@@ -1,0 +1,47 @@
+# CLAUDE.md
+
+Working context for Claude Code sessions in this project.
+
+> **What this file is.** This is the per-project Claude session
+> contract — seeded by a domain Element's `bin/init` at install time
+> and never overwritten thereafter. Edit freely; the project owns
+> it forever. Which domain Element was installed (and at what
+> version) is recorded in `.claude/rasa.lock.json`.
+
+## What this project is
+
+<!-- One paragraph: what this project does, who uses it, what it's for. -->
+
+## Source of truth
+
+- **Domain Element** — see `.claude/rasa.lock.json` for the
+  installed Element's name, version, and pinned SHA. The Element's
+  `content/` defines the skills, rules, and agents available to
+  Claude sessions in this project.
+- **Project-specific notes** — add your own architectural references
+  here (other repos, internal docs, deployment targets).
+
+## Conventions
+
+<!-- Project-specific working conventions. The installed Element
+     ships universal conventions; this section is for project-local
+     overrides + extensions. -->
+
+## Don'ts
+
+<!-- Project-specific anti-patterns. Hard rules for this project. -->
+
+## How to update the installed Element
+
+```sh
+# Pull latest Element changes (per the /sync skill in the installed Element):
+# (replace with actual /sync invocation once the domain Element authors one)
+```
+
+## See also
+
+- `.claude/rasa.lock.json` — which Element + version is pinned in this
+  project (read this before assuming anything about installed
+  skills / rules / agents).
+- The Element's repo URL is in `.claude/rasa.lock.json#element.repo` —
+  visit it for upstream changes, issues, releases.

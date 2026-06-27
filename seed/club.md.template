@@ -1,0 +1,264 @@
+<!--
+  CLUB CONFIG — rasa.orchestrator.soccer.club
+  ===========================================
+
+  This file is the club's PROFILE + the cross-cutting DIMENSIONS the whole
+  platform reads. It is the single source of truth for WHO this club is and
+  for the taxonomy every other record validates against.
+
+  INSTALL POSTURE
+  ---------------
+  This template ships at `seed/club.md.template` and installs ONCE to
+  `state/club.md` in the club's umbrella repo (policy: skip-if-exists). After
+  install it is PROJECT-OWNED — the club director fills it and owns it forever.
+  bin/init never overwrites it on upgrade. (Unlike the Element-owned
+  `state/<entity>/_template.md` record templates, which ARE refreshed on
+  upgrade, this is your config — yours to edit.) A director fills it once,
+  then revises it as the club grows (adds an age group, a new season, a
+  registration org).
+
+  WHY IT'S LOAD-BEARING
+  ---------------------
+  Every skill that touches a member, a team, or a tryout VALIDATES against the
+  dimensions declared here:
+    - `/member`, `/team`, `/tryout` reject any `age_group` not in `#age_groups`
+      and any `gender` not in `#genders`. The grid is what makes "U13 isn't a
+      thing at this club" an enforceable fact instead of a typo.
+    - `/status` computes its age_group × gender cross-tab and its empty-cell
+      gap report against THIS catalog — that's how a cell with no team is even
+      detectable.
+    - `registrations[]` on members + the (phase-2) Registration entity draw
+      their system names from `#registration_systems`.
+  So: if a value isn't declared here, it doesn't exist to the platform. Add the
+  dimension HERE first, then use it in records. Do not invent dimensions inside
+  a record.
+
+  REFERENCE SYNTAX
+  ----------------
+  Skills cite these dimensions as `state/club.md#age_groups`,
+  `state/club.md#genders`, `state/club.md#registration_systems`. The anchors
+  are the YAML keys in the frontmatter below — keep their names exact.
+
+  FOUNDATION vs PHASE 2
+  ---------------------
+  - FOUNDATION (used by this build's skills): identity, age_groups, genders,
+    registration_systems, seasons.
+  - PHASE 2 (declared here as a placeholder, no skills authored this build):
+    complexes/fields. The shape is sketched below so the catalog is ready when
+    `/complex` + `/field` ship; until then leave it as the starter or remove it.
+
+  Replace every <PLACEHOLDER>. Lists are EDITABLE — the defaults below are a
+  sensible US youth-soccer starting point, not a mandate. Trim, extend, rename
+  to match your club. Delete this comment block once you've filled it in.
+-->
+
+---
+# ─── machine-readable: the dimensions every skill validates against ───
+# Keep these YAML keys' names EXACT — skills reference them by anchor
+# (state/club.md#age_groups, #genders, #registration_systems).
+
+# ── club identity (the profile) ──
+club:
+  name: "<Club Name>"                 # display name. e.g. "Riverside United SC". used in /status headlines.
+  short_name: "<CLUB>"                # short tag for ids/labels. e.g. "RUSC".
+  founded: "<YYYY>"                   # year founded, or blank.
+  location: "<City, State>"          # primary city/region the club operates in.
+  governing_body: "<state assoc.>"   # the state/national association the club affiliates under (free text; see registration_systems below).
+  website: "<https://example.org|>"
+  primary_contact:                    # the club's main administrative contact.
+    name: "<Director Name>"
+    email: "<admin@example.org>"
+    phone: "<+1-555-0100>"
+
+# ── DIMENSION: age_groups ──────────────────────────────────────────────
+# The club's youth-soccer age ladder. Skills validate every record's
+# `age_group` against this list. EDITABLE — the default is a standard US
+# youth ladder; trim or extend to your club's actual offerings. Each value
+# is the literal string used in records (Member.age_group, Team.age_group,
+# Tryout.age_group). Keep them short + stable (e.g. "U12", not "Under-12s").
+age_groups:
+  - U6                                # micro / academy
+  - U8
+  - U10
+  - U12
+  - U14
+  - U16
+  - U19                               # high-school age
+  - Adult                             # adult / senior side, if the club fields one
+
+# ── DIMENSION: genders ─────────────────────────────────────────────────
+# The gender categories the club fields teams in. Skills validate every
+# record's `gender` against this list. EDITABLE — drop `coed` if you never
+# field mixed sides; some clubs prefer different labels. The default set
+# covers the common youth-soccer case.
+genders:
+  - boys
+  - girls
+  - coed                              # mixed; remove if the club separates strictly
+
+# ── DIMENSION: registration_systems ────────────────────────────────────
+# Every org a member or team registers WITH, across the four levels:
+# the club's own system + state / regional / national bodies. Members'
+# `registrations[]` (and the phase-2 Registration entity) draw their
+# `system` names from the `name` fields here. EDITABLE — fill in the real
+# orgs your club registers under; the entries below are SHAPE + examples.
+# `level` is one of: club | state | regional | national.
+registration_systems:
+  - name: "<club-system>"             # the club's own internal registration. e.g. "RUSC Registration".
+    level: club
+    notes: "<the club's own member/team enrollment system of record>"
+  - name: "<State Soccer Association>" # e.g. a US state youth-soccer association.
+    level: state
+    notes: "<state-level sanctioning / player registration org>"
+  - name: "<Regional League/Conference>" # e.g. a regional competitive league the club enters teams into.
+    level: regional
+    notes: "<regional competition body — optional; remove if not applicable>"
+  - name: "<National Body>"           # e.g. a national youth-soccer organization.
+    level: national
+    notes: "<national affiliation / sanctioning body>"
+
+# ── DIMENSION: seasons ─────────────────────────────────────────────────
+# How the club's calendar is sliced. Team.season + Tryout dates resolve
+# against this. EDITABLE — a club may run fall/spring, a single year-round
+# season, or a custom split. `current` names the active season /status
+# reports on by default.
+seasons:
+  model: "<fall-spring|year-round|custom>"   # the club's season structure.
+  current: "<Fall 2026>"                      # the active season; /status defaults to this.
+  list:                                       # the seasons the club runs. each is a label used in Team.season.
+    - "Fall 2026"
+    - "Spring 2027"
+    # year-round clubs may carry a single rolling entry, e.g. "2026-27".
+
+# ── DIMENSION: complexes / fields (PHASE 2 — placeholder) ──────────────
+# The club's physical venues. PHASE 2: no `/complex` or `/field` skill is
+# authored in this build, and there is no `state/complexes/` record yet.
+# This block is a forward-declaration so Team.home_complex + Tryout.location
+# have something to point at later. For now it is a STARTER LIST — fill in
+# the names you know, or remove the block until the phase-2 skills ship.
+# When they ship, each complex becomes its own `state/complexes/<id>.md`
+# record (with fields[], parking, vending, address) and this list is
+# superseded by that directory.
+complexes:                            # PHASE 2 — declarative only this build
+  - id: "<north-fields>"             # stable slug; becomes the Complex record id in phase 2.
+    name: "<North Fields Complex>"
+    address: "<street, city, state>"
+    fields:                           # the playable fields at this complex (phase 2: each becomes a Field record).
+      - id: "<north-1>"
+        name: "<Field 1>"
+        surface: "<grass|turf>"
+        size: "<full|9v9|7v7|small-sided>"
+    parking: "<notes — lots, capacity, overflow>"
+    vending: "<notes — concessions, restrooms, amenities>"
+---
+
+# <Club Name> — Club Profile & Dimensions
+
+> **<Club Name>** (`<short_name>`) · <City, State> · founded <YYYY>
+> Active season: **<current season>** · governing body: <state assoc.>
+
+This is the club's identity card and the **dimension catalog** the whole
+platform reads. The frontmatter above is the machine-readable source of
+truth; the sections below are the human-readable companion. Keep them in
+sync — when you edit a dimension, update both the YAML and the prose.
+
+---
+
+## Identity *(human-authored — you own this)*
+
+One paragraph on the club: who you are, what you field, your mission, your
+competitive level (recreational / select / competitive / academy), the
+community you serve. `/status` shows the `club.name`; everything else here is
+context for whoever opens the repo.
+
+- <e.g. "Riverside United SC is a community youth-soccer club fielding
+   recreational and select sides U6 through U19 across the Riverside metro,
+   founded 2014, affiliated through the State Youth Soccer Association.">
+
+---
+
+## Dimensions *(the catalog every skill validates against)*
+
+The cross-cutting taxonomy. **This is load-bearing**: a record can only use a
+value declared here. To add a U13 group, a new gender label, or a national
+registration org, **edit the frontmatter list first**, then use the value.
+
+### Age groups *(`#age_groups`)*
+
+The club's age ladder. `/member`, `/team`, `/tryout` reject any `age_group`
+not in this list; `/status` builds its age_group × gender grid from it.
+
+> Default ladder: U6 · U8 · U10 · U12 · U14 · U16 · U19 · Adult — **editable**.
+> Trim to what you actually field; add intermediate groups (U11, U13, U15,
+> U17, U18) if your league uses single-year banding.
+
+### Genders *(`#genders`)*
+
+The categories you field sides in: `boys` · `girls` · `coed`. **Editable** —
+drop `coed` if you separate strictly. `/team` and `/tryout` accept only these.
+
+### Registration systems *(`#registration_systems`)*
+
+The four-level enrollment picture: the club's own system + the state, regional,
+and national bodies you register members and teams with. Members'
+`registrations[]` use the `name` values here; the phase-2 Registration entity
+(`member|team × system × season`) will resolve against this list. Fill in your
+real orgs — the defaults are shape placeholders.
+
+| Level | System (`name`) | What it's for |
+|---|---|---|
+| club | `<club-system>` | the club's own enrollment system of record |
+| state | `<State Soccer Association>` | state-level sanctioning / player registration |
+| regional | `<Regional League/Conference>` | regional competition entry (optional) |
+| national | `<National Body>` | national affiliation / sanctioning |
+
+### Seasons *(`#seasons`)*
+
+How the calendar is sliced (`model`), the active season (`current`, what
+`/status` defaults to), and the `list` of season labels `Team.season` uses.
+**Editable** — fall/spring, year-round, or custom.
+
+---
+
+## Complexes & fields *(PHASE 2 — placeholder)*
+
+The club's physical venues, where teams practice/play and tryouts run.
+
+**Phase 2.** No `/complex` or `/field` skill is authored in this build and
+there is no `state/complexes/` directory yet. The `complexes:` block in the
+frontmatter is a **forward-declaration** so `Team.home_complex` and
+`Tryout.location` have stable ids to point at — they are recorded as intent and
+degrade gracefully today. When the phase-2 skills ship, each complex becomes
+its own `state/complexes/<id>.md` record (carrying `fields[]`, `parking`,
+`vending`, `address`), each field a `state/fields/<id>.md`, and this starter
+list is superseded by those directories.
+
+Until then: fill in the venues you know (so the references resolve to *names*),
+or remove the block entirely — nothing in this build's foundation depends on it.
+
+---
+
+## Notes *(human-authored — preserved)*
+
+Anything about the club that isn't a structured dimension: history, board
+composition, fee structure, scholarship policy, the date you switched state
+associations, the reason you renamed an age group. Free-form; yours.
+
+- <e.g. "Added the Adult side in '25; coed only at U6–U8 per league rule;
+   regional league entry is new for Fall '26.">
+
+---
+
+<!--
+  MAINTENANCE CONTRACT
+  --------------------
+  - This file is PROJECT-OWNED. The Element will not overwrite it on upgrade.
+  - It is the ONLY place dimensions are defined. Adding a dimension is an edit
+    HERE, not a new field in a record. Records validate against this catalog.
+  - Keep frontmatter ⇄ prose in sync. Skills parse the frontmatter; humans
+    read the prose. A dimension present in one but not the other is drift.
+  - The `complexes:` block is phase-2 scaffolding. Safe to leave as the
+    starter, fill with real venues, or delete until /complex + /field ship.
+  - Anchors are load-bearing: skills reference #age_groups, #genders,
+    #registration_systems by these exact YAML key names. Don't rename them.
+-->

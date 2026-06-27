@@ -1,0 +1,163 @@
+{
+  "$schema": "https://rasa-os.github.io/schema/rasa.schema.v1.json",
+  "contract_version": "1.3.0",
+  "name": "rasa.orchestrator.soccer.club",
+  "version": "0.1.0",
+  "kind": "orchestrator",
+  "aliases": [
+    "orchestrator-soccer-club",
+    "rasa.orchestrator.soccer-club"
+  ],
+  "description": "RasaOS Orchestrator \u00b7 Soccer Club. Pattern 3 (Hybrid/CTO) club-operations platform managing the whole organization: members (players/parents), staff (coaches/directors/admins/board), teams, rosters, try-outs, age groups, genders, practice/game schedules, fields, complexes, tournaments, leagues, and multi-system registrations. Sits above the domain.soccer.* role family. First sub-namespaced orchestrator.",
+  "source": {
+    "repo": "https://github.com/RasaOS/orchestrator-soccer-club",
+    "branch": "main"
+  },
+  "tier": "Pro",
+  "capabilities": [
+    "club.member-management",
+    "club.staff-management",
+    "club.team-management",
+    "club.roster-management",
+    "club.tryout-management",
+    "club.operations-rollup"
+  ],
+  "permissions": [
+    "fs:write",
+    "shell:exec"
+  ],
+  "requires": {},
+  "rasa": {
+    "role": "orchestrator-element",
+    "shape_pattern": "hybrid",
+    "note": "The FIRST sub-namespaced orchestrator, and a Pattern 3 (Hybrid/CTO-style) CLUB-OPERATIONS PLATFORM (orchestrator-core SHAPE.md Pattern 3 \u2014 'a club with N teams' is the soccer analog of orchestrator.code's 'a company with N repos'). Installs into the club's umbrella repo and owns the club's OPERATIONAL DATA in state/ \u2014 a relational model of 13 concerns: members (players/parents), staff (coaches/directors/admins/board), teams, rosters, try-outs, leagues, tournaments, fields, complexes, schedules, multi-system registrations, + the age-group/gender/registration-system dimensions. The role-DOMAINS (domain.soccer.{player,coach,parent,director,board,team,league} + the live goalkeeping) give each PERSON their role toolkit \u2014 SOFT references (no requires.elements[]); the orchestrator manages people/units/events, the domains are the playbooks. v0.1.0 FOUNDATION: the entity-model spine + People/Org/Process skills (member/staff/team/roster/tryout) + status; the 6 phase-2 concerns (field/complex/schedule/tournament/league/registration) are DEFINED in the model + have state/ dirs, their skills land in phase 2.",
+    "naming": "First sub-namespaced ORCHESTRATOR (extends the domain.soccer.goalkeeping sub-namespace precedent to the orchestrator kind). Dotted name rasa.orchestrator.soccer.club; folder/repo dashed (orchestrator-soccer-club); rasa.json#name authoritative; alias rasa.orchestrator.soccer-club.",
+    "references": {
+      "pattern": "orchestrator-core content/SHAPE.md \u2192 Pattern 3 \u2014 Hybrid (CTO-style)",
+      "role_family": "domain.soccer.{player,coach,parent,director,board,team,league} (+ goalkeeping) \u2014 the per-role toolkits the managed people use; soft references, graceful if absent (only goalkeeping is content-bearing so far)",
+      "sibling": "orchestrator.code (the engineering Pattern-3 sibling \u2014 same shape, different vertical)"
+    }
+  },
+  "element": {
+    "description": "Element-owned club-ops toolkit, refreshed on upgrade. Installs into the club's umbrella repo: the club-ops rules spine + skills to .claude/, the entity-record templates + the data-model README to state/. The actual records + the club config are project-owned (see seed.files).",
+    "files": [
+      {
+        "from": "content/club-ops-rules.md",
+        "to": ".claude/club-ops-rules.md",
+        "policy": "file-replace",
+        "note": "The club-ops spine + THE ENTITY MODEL for all 13 concerns (canonical field sets, relationships, invariants, the foundation-vs-phase-2 split). Every skill executes this contract."
+      },
+      {
+        "from": "content/skills/",
+        "to": ".claude/skills/",
+        "policy": "directory-mirror",
+        "note": "The foundation club-ops skills: /member, /staff, /team, /roster, /tryout, /status. Phase-2 skills (field/complex/schedule/tournament/league/registration) land later. Element-owned; refreshed on upgrade."
+      },
+      {
+        "from": "content/state/README.md",
+        "to": "state/README.md",
+        "policy": "file-replace",
+        "note": "The state/ data-model reference: one dir per entity, one .md per record from its _template, the foundation-vs-phase-2 split. Element-owned."
+      },
+      {
+        "from": "content/state/members/_template.md",
+        "to": "state/members/_template.md",
+        "policy": "file-replace",
+        "note": "Member record shape (player|parent). /member creates records from it."
+      },
+      {
+        "from": "content/state/staff/_template.md",
+        "to": "state/staff/_template.md",
+        "policy": "file-replace",
+        "note": "Staff record shape (coach|director|admin|board). /staff creates records from it."
+      },
+      {
+        "from": "content/state/teams/_template.md",
+        "to": "state/teams/_template.md",
+        "policy": "file-replace",
+        "note": "Team record shape (age_group x gender x season). /team creates records from it."
+      },
+      {
+        "from": "content/state/rosters/_template.md",
+        "to": "state/rosters/_template.md",
+        "policy": "file-replace",
+        "note": "Roster record shape. /roster creates records from it (keeping the team + member surfaces consistent)."
+      },
+      {
+        "from": "content/state/tryouts/_template.md",
+        "to": "state/tryouts/_template.md",
+        "policy": "file-replace",
+        "note": "Try-out record shape. /tryout creates records from it; outcomes feed /roster."
+      },
+      {
+        "from": "content/README.md",
+        "to": "content/README.md",
+        "policy": "opt-in",
+        "note": "Orchestrator overview + install map. Authoring doc; not installed into the club repo."
+      }
+    ]
+  },
+  "seed": {
+    "description": "Project-owned club state copied at install only (skip-if-exists). These belong to the club's umbrella repo: the club config (dimensions) + the per-entity record dirs. Records are created by the skills, not seeded; the dirs exist from install so the full 13-concern model is present.",
+    "files": [
+      {
+        "from": "seed/club.md.template",
+        "to": "state/club.md",
+        "policy": "skip-if-exists",
+        "note": "The club PROFILE + the cross-cutting DIMENSIONS the whole platform reads: age_groups, genders, registration_systems, seasons. Project-owned; the director fills it. Every skill resolves dimensions here."
+      },
+      {
+        "from": "seed/state/leagues/.gitkeep",
+        "to": "state/leagues/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (League records). Scaffolded so the full model is present; the /league skill + _template land in phase 2."
+      },
+      {
+        "from": "seed/state/tournaments/.gitkeep",
+        "to": "state/tournaments/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (Tournament records)."
+      },
+      {
+        "from": "seed/state/fields/.gitkeep",
+        "to": "state/fields/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (Field records)."
+      },
+      {
+        "from": "seed/state/complexes/.gitkeep",
+        "to": "state/complexes/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (Complex records \u2014 fields, parking, vending)."
+      },
+      {
+        "from": "seed/state/schedules/.gitkeep",
+        "to": "state/schedules/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (Schedule records \u2014 practice/game; team x field x datetime)."
+      },
+      {
+        "from": "seed/state/registrations/.gitkeep",
+        "to": "state/registrations/.gitkeep",
+        "policy": "skip-if-exists",
+        "note": "Phase-2 entity dir (Registration records \u2014 member/team x system x season)."
+      },
+      {
+        "from": "seed/CLAUDE.md.template",
+        "to": "CLAUDE.md",
+        "policy": "skip-if-exists",
+        "note": "Per-project Claude session contract for the club's umbrella repo. Project-owned."
+      },
+      {
+        "from": "seed/rasa.lock.json.template",
+        "to": ".claude/rasa.lock.json",
+        "policy": "init-only-with-sha",
+        "note": "Connection Contract lockfile (canon Spec \u00a76). Stamped with the Element HEAD SHA at init."
+      }
+    ]
+  },
+  "scaffold": {
+    "description": "Empty directories created at init. v1.0.0 ships none \u2014 forks add as needed.",
+    "directories": []
+  }
+}
